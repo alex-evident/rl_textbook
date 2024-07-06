@@ -14,7 +14,7 @@ fn build_value_dict() -> Dict[String, Int8]:
     value_dict["C"] = 4
     return value_dict
 
-def read_track(filepath: String, value_dict: Dict[String, Int8]) -> Tensor[DType.int8]:
+fn read_track(filepath: String, value_dict: Dict[String, Int8]) raises -> Tensor[DType.int8]:
     with open(filepath, "r") as f:
         var grid_text = f.read()
         var grid_split = grid_text.splitlines()
@@ -39,7 +39,7 @@ def read_track(filepath: String, value_dict: Dict[String, Int8]) -> Tensor[DType
         
         return track
 
-def get_finish_coords(filepath: String) -> Tuple[Int8, Int8, Int8]:
+fn get_finish_coords(filepath: String) raises -> Tuple[Int8, Int8, Int8]:
     with open(filepath, "r") as f:
         var grid_text = f.read()
         var grid_split = grid_text.splitlines()
@@ -57,7 +57,7 @@ def get_finish_coords(filepath: String) -> Tuple[Int8, Int8, Int8]:
         
         return finish_x, finish_y_min, finish_y_max
 
-def get_start_coords(filepath: String) -> Tuple[Int8, Int8]:
+fn get_start_coords(filepath: String) raises -> Tuple[Int8, Int8]:
     with open(filepath, "r") as f:
         var grid_text = f.read()
         var grid_split = grid_text.splitlines()
@@ -74,7 +74,7 @@ def get_start_coords(filepath: String) -> Tuple[Int8, Int8]:
         return start_x_min, start_x_max
 
 
-def reset_state(start_coords: Tuple[Int8, Int8], inout state: SIMD[DType.int8, 4]) -> None:
+fn reset_state(start_coords: Tuple[Int8, Int8], inout state: SIMD[DType.int8, 4]) -> None:
     var p1 = DTypePointer[DType.int8].alloc(1)
     randint[DType.int8](p1, size=1, low=int(start_coords[0]), high=int(start_coords[1]))
     state[0] = 1
@@ -82,7 +82,7 @@ def reset_state(start_coords: Tuple[Int8, Int8], inout state: SIMD[DType.int8, 4
     state[2] = 0
     state[3] = 0
 
-def clip(value: Int, a_min: Int, a_max: Int) -> Int:
+fn clip(value: Int, a_min: Int, a_max: Int) -> Int:
     if value < a_min:
         return a_min
     elif value > a_max:
@@ -90,7 +90,7 @@ def clip(value: Int, a_min: Int, a_max: Int) -> Int:
     else:
         return value
 
-def update_state(
+fn update_state(
     inout state: SIMD[DType.int8, 4],
     inout terminated: Bool, 
     y_max: Int, 
@@ -98,11 +98,11 @@ def update_state(
     track: Tensor[DType.int8], 
     value_dict: Dict[String, Int8],
     start_coords: Tuple[Int8, Int8],
-    finish_bounds: Tuple[Int8, Int8, Int8]) -> None:
+    finish_bounds: Tuple[Int8, Int8, Int8]) raises -> None:
     state[0] = clip(int(state[0] + state[2]), a_min=0, a_max=y_max)
     state[1] = clip(int(state[1] + state[3]), a_min=0, a_max=x_max)
 
-    new_loc = track[Index(state[0], state[1])]
+    var new_loc = track[Index(state[0], state[1])]
 
     # check if finished
     if new_loc == value_dict["F"]:
